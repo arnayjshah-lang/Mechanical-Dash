@@ -23,14 +23,18 @@ var timeSinceLastJump: float = 0.0
 var overlappingOrbs: Array[Node2D] = []
 
 # Reset player
-func reset():
+func resetp():
 	velocity.x = SPEED
 	velocity.y = 0
 	position = startPos.position
 
 	notOnFloorSince = 1.0
 	inJump = false
-
+	
+# Reset map objects
+func resetmo():
+	get_tree().get_nodes_in_group("OrbUsed")
+	remove_from_group("OrbUsed")
 
 func verifyJumpRequirements():
 	var spaceState = get_world_2d().direct_space_state
@@ -44,7 +48,8 @@ func verifyJumpRequirements():
 func _ready() -> void:
 	# Defining Start Game Signal
 	Events.startGame.connect(startGame)
-	reset() # Reseting Player
+	resetp() # Reseting Player
+	resetmo() # Reseting Map Objects
 
 # Start Game "Lambda"
 func startGame() -> void:
@@ -74,6 +79,10 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_just_pressed("Jump") and not orb.is_in_group("OrbUsed"):
 				orb.add_to_group("OrbUsed")
 				velocity.y = -JUMP_VELOCITY
+		elif orb.is_in_group("Orange"):
+			if Input.is_action_just_pressed("Jump") and not orb.is_in_group("OrbUsed"):
+				orb.add_to_group("OrbUsed")
+				velocity.y = -JUMP_VELOCITY * 1.2
 
 	# Handle Icon Rotation
 	if !is_on_floor():
@@ -85,20 +94,23 @@ func _physics_process(delta: float) -> void:
 		notOnFloorSince = 0.0
 
 	if Input.is_action_just_pressed("Debug"):
-		reset()
+		resetp()
+		resetmo()
 
 	move_and_slide()
 
 # Cube kill collision
 func _on_block_collision_body_entered(body : Node2D) -> void:
 	if body.is_in_group("Block"):
-		reset()
+		resetp()
+		resetmo()
 
 
 func _on_instant_collision_body_entered(body : Node2D) -> void:
 	# Instant Kill collision
 	if body.is_in_group("Spike"):
-		reset()
+		resetp()
+		resetmo()
 
 	# Orb collisions
 	if body.is_in_group("Orb"):
